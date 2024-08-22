@@ -20,6 +20,13 @@ MYSQL_CONFIG = {
     'database': 'meesho',
 }
 
+MYSQL_CONFIG1 = {
+    'host': 'localhost',
+    'user': 'root',
+    'password': '',
+    'database': 'migration',
+}
+
 MONGO_URI = "mongodb://localhost:27017"
 MONGO_DB_NAME = "migration"
 
@@ -69,15 +76,14 @@ async def country_migrate():
         cursor.close()
         mysql_conn.close()
 
-        return {"message": "Data migration completed successfully!"}
+        return {"message": "migration  success!"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/stop_migrate")
 async def stop_migrate():
-    return {"message": "Data migration stopped successfully!"}
-
+    return {"message": " migration success!"}
 
 @app.post("/ProductMigrate")
 async def product_migrate():
@@ -120,7 +126,44 @@ async def product_migrate():
         cursor.close()
         mysql_conn.close()
 
-        return {"message": "Data migration completed successfully!"}
+        return {"message": "migration success!"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/WebsiteMigrate")
+async def website_migrate():
+    try:
+        
+        mysql_conn1 = pymysql.connect(**MYSQL_CONFIG1)
+        cursor1 = mysql_conn1.cursor(pymysql.cursors.DictCursor)
+
+        query1 = """
+            SELECT 
+             *   
+            FROM 
+            web_showcase 
+        """
+        cursor1.execute(query1)
+        result = cursor1.fetchall()
+        
+       
+        website_collection = mongo_db['website']
+        
+       
+        for row in result:
+           website_document = {
+                    "showcase_id": row['showcase_id'],
+              
+                }
+           website_collection.insert_one(website_document)
+
+       
+        cursor1.close()
+        mysql_conn1.close()
+
+        return {"message": "Website migration success!"}
+
+    except pymysql.MySQLError as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+
